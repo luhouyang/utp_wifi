@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:js_util';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_internet_speed_test/flutter_internet_speed_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,10 +16,13 @@ class AddWifiDataPage extends StatefulWidget {
 class _AddWifiDataPageState extends State<AddWifiDataPage> {
   Timer? timer;
 
-  Location _locationController = Location();
+  final Location _locationController = Location();
   LatLng? _livePostion;
 
   FlutterInternetSpeedTest speedTest = FlutterInternetSpeedTest();
+  String _loadingText = "";
+  String _speed = "";
+
   double _downloadRate = 0;
   double _uploadRate = 0;
   String _downloadUnitText = 'Mbps';
@@ -30,9 +31,12 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   WifiHeatmapEntity wifiHeatmapEntity = WifiHeatmapEntity(wifiHeatmap: []);
 
   void _intervalTimer() {
-    timer = Timer(const Duration(seconds: 20), () {
-      getLiveLocation();
-    });
+    timer = Timer.periodic(
+      const Duration(seconds: 20),
+      (tmr) {
+        getInternetSpeed();
+      },
+    );
   }
 
   @override
@@ -41,6 +45,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       reset();
     });
+    getInternetSpeed();
     _intervalTimer();
   }
 
@@ -55,29 +60,35 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-      body: _livePostion == null
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : GoogleMap(
+            body: _livePostion == null
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 25,),
+                        Text(_speed),
+                        Text(_loadingText),
+                        const SizedBox(height: 50,),
+                        Text(wifiHeatmapEntity.wifiHeatmap.toString()),
+                      ],
+                    ),
+                  ) /*GoogleMap(
               initialCameraPosition:
                   CameraPosition(target: _livePostion!, zoom: 15),
               markers: {
                 Marker(
-                    markerId: MarkerId("user"),
+                    markerId: const MarkerId("user"),
                     icon: BitmapDescriptor.defaultMarker,
                     position: _livePostion!),
-                Marker(
-                    markerId: MarkerId("start"),
-                    icon: BitmapDescriptor.defaultMarker,
-                    position: LatLng(37.42796133580664, -122.085749655962)),
               },
-            ),
-    ));
+            ),*/
+            ));
   }
 
   Future getInternetSpeed() async {
-    speedTest.startTesting(onStarted: () {
+    await speedTest.startTesting(onStarted: () {
       debugPrint("Starting speed test");
     }, onCompleted: (TestResult download, TestResult upload) {
       setState(() {
@@ -91,8 +102,12 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
         debugPrint("Upload: $_uploadRate | $_uploadUnitText");
       });
     }, onProgress: (double percent, TestResult data) {
-      debugPrint(
-          "Load : ${"#" * (percent / 10).floor()}${"-" * (100 - percent / 10).floor()}");
+      getLiveLocation(data);
+      _loadingText =
+          "Load : ${"#" * (percent / 10).floor()}${"-" * ((100 - percent) / 10).ceil()}";
+      _speed =
+          "Speed : ${data.transferRate} ${data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps'}";
+      debugPrint("$_loadingText\t\t\t$_speed");
     }, onError: (String errorMessage, String speedTestError) {
       debugPrint("Error: $errorMessage");
     }, onDefaultServerSelectionInProgress: () {
@@ -104,7 +119,9 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
     });
   }
 
-  Future<void> getLiveLocation() async {
+  Future<void> getLiveLocation(TestResult data) async {
+    bool sameLocation = false;
+
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 
@@ -123,32 +140,37 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
       }
     }
 
-    _locationController.onLocationChanged
-        .listen((LocationData currentLocation) {
-      if (currentLocation.latitude != null &&
-          currentLocation.longitude != null) {
-        getInternetSpeed().then((value) {
-          if (!mounted) return;
-          setState(() {
-            _livePostion =
-                LatLng(currentLocation.latitude!, currentLocation.longitude!);
-            int indexSame = wifiHeatmapEntity.wifiHeatmap.indexOf(
-                [currentLocation.latitude, currentLocation.longitude, int]);
-            if (indexSame == -1) {
-              wifiHeatmapEntity.wifiHeatmap.add([
-                currentLocation.latitude,
-                currentLocation.longitude,
-                _downloadRate
-              ]);
-            } else {
-              wifiHeatmapEntity.wifiHeatmap[indexSame] =
-                  min(wifiHeatmapEntity.wifiHeatmap[indexSame][2] as double, _downloadRate);
-            }
-          });
-          debugPrint(_livePostion.toString());
-        }); // get current internet speed
-      }
-    });
+    LocationData currentLocation = await _locationController.getLocation();
+    if (currentLocation.latitude != null && currentLocation.longitude != null) {
+      if (!mounted) return;
+      setState(() {
+        _livePostion =
+            LatLng(currentLocation.latitude!, currentLocation.longitude!);
+
+        wifiHeatmapEntity.wifiHeatmap.asMap().forEach((index, locationHeight) {
+          if (locationHeight[0] == currentLocation.latitude &&
+              locationHeight[1] == currentLocation.longitude) {
+            wifiHeatmapEntity.wifiHeatmap[index][2] =
+                (((wifiHeatmapEntity.wifiHeatmap[index][2] +
+                            data.transferRate) /
+                        2.0) as double)
+                    .toPrecision(6);
+            sameLocation = true;
+            return;
+          }
+        });
+
+        if (!sameLocation) {
+          wifiHeatmapEntity.wifiHeatmap.add([
+            currentLocation.latitude,
+            currentLocation.longitude,
+            data.transferRate
+          ]);
+        }
+      });
+
+      debugPrint(_livePostion.toString());
+    }
   }
 
   void reset() {
@@ -160,5 +182,12 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
         _uploadUnitText = 'Mbps';
       }
     });
+  }
+}
+
+extension Precision on double {
+  double toPrecision(int fractionDigits) {
+    num mod = pow(10, fractionDigits.toDouble());
+    return ((this * mod).round().toDouble() / mod);
   }
 }
