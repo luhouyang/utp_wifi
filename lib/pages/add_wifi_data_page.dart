@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_internet_speed_test/flutter_internet_speed_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
@@ -11,6 +12,7 @@ class AddWifiDataPage extends StatefulWidget {
 
 class _AddWifiDataPageState extends State<AddWifiDataPage> {
   Location _locationController = Location();
+  FlutterInternetSpeedTest speedTest = FlutterInternetSpeedTest();
 
   static const CameraPosition _kGooglePlex = CameraPosition(
       target: LatLng(37.42796133580664, -122.085749655962), zoom: 13);
@@ -20,6 +22,12 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   void initState() {
     super.initState();
     getLiveLocation();
+  }
+
+  @override
+  void dispose() {
+    // TODO: save data
+    super.dispose();
   }
 
   @override
@@ -42,13 +50,42 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
                     markerId: MarkerId("start"),
                     icon: BitmapDescriptor.defaultMarker,
                     position: LatLng(37.42796133580664, -122.085749655962)),
-                Marker(
-                    markerId: MarkerId("dest"),
-                    icon: BitmapDescriptor.defaultMarker,
-                    position: LatLng(37.40296000000000, -122.08832357078792))
               },
             ),
     ));
+  }
+
+  Future getInternetSpeed() async {
+    speedTest.startTesting(
+        onStarted: () {
+          // TODO
+        },
+        onCompleted: (TestResult download, TestResult upload) {
+          // TODO
+        },
+        onProgress: (double percent, TestResult data) {
+          // TODO
+        },
+        onError: (String errorMessage, String speedTestError) {
+          // TODO
+        },
+        onDefaultServerSelectionInProgress: () {
+          // TODO
+          //Only when you use useFastApi parameter as true(default)
+        },
+        onDefaultServerSelectionDone: (Client? client) {
+          // TODO
+          //Only when you use useFastApi parameter as true(default)
+        },
+        onDownloadComplete: (TestResult data) {
+          // TODO
+        },
+        onUploadComplete: (TestResult data) {
+          // TODO
+        },
+        onCancel: () {
+        // TODO Request cancelled callback
+        });
   }
 
   Future<void> getLiveLocation() async {
@@ -74,6 +111,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
         .listen((LocationData currentLocation) {
       if (currentLocation.latitude != null &&
           currentLocation.longitude != null) {
+        if (!mounted) return;
         setState(() {
           _livePostion =
               LatLng(currentLocation.latitude!, currentLocation.longitude!);

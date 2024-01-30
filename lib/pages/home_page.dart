@@ -17,7 +17,6 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: changePage(pageIdx),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
         onTap: (value) {
           setState(() {
             pageIdx = value;
