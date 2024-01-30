@@ -24,7 +24,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
 
   @override
   void dispose() {
-    debugPrint(wifiHeatmapEntity.toString());
+    debugPrint("$wifiHeatmapEntity show page");
     super.dispose();
   }
 
@@ -32,12 +32,12 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-      body: _livePostion == null
+      body: Center(
+                    child: Text("testing"))/*_livePostion == null
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : Center(
-                    child: Text("testing"),/*GoogleMap(
+          : GoogleMap(
               initialCameraPosition:
                   CameraPosition(target: _livePostion!, zoom: 15),
               markers: {
@@ -47,7 +47,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
                     position: _livePostion!),
               },
             ),*/
-    )));
+    ));
   }
 
   Future<void> getLiveLocation() async {

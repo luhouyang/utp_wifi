@@ -14,15 +14,17 @@ class AddWifiDataPage extends StatefulWidget {
 }
 
 class _AddWifiDataPageState extends State<AddWifiDataPage> {
-  Timer? timer;
+  late Timer timer;
 
   final Location _locationController = Location();
   LatLng? _livePostion;
+  PermissionStatus? permissionGranted;
+  bool? serviceEnabled;
 
   FlutterInternetSpeedTest speedTest = FlutterInternetSpeedTest();
-  String _speed = "";
-  String _type = "";
-  String _loadingText = "";
+  String _speed = "waiting . . .";
+  String _type = "waiting . . .";
+  String _loadingText = "waiting . . .";
 
   double _downloadRate = 0;
   double _uploadRate = 0;
@@ -42,18 +44,15 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   @override
   void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      reset();
-    });
     getInternetSpeed();
     _intervalTimer();
+    super.initState();
   }
 
   @override
   void dispose() {
-    debugPrint(wifiHeatmapEntity.toString());
-    timer!.cancel();
+    debugPrint("$wifiHeatmapEntity add page");
+    timer.cancel();
     super.dispose();
   }
 
@@ -62,9 +61,15 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
     return SafeArea(
         child: Scaffold(
             body: _livePostion == null
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
+                ? () {
+                    setState(() {
+                      serviceEnabled = null;
+                    });
+                    Center(
+                      child: Text(
+                          "Location Permission: ${permissionGranted == PermissionStatus.granted ? "Permission Granted" : "Not Granted"}"),
+                    );
+                  }()
                 : Center(
                     child: Column(
                       children: [
@@ -102,25 +107,30 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
           debugPrint("Starting speed test");
         },
         onCompleted: (TestResult download, TestResult upload) {
+          if (!mounted) return;
           setState(() {
+            reset();
             _downloadRate = download.transferRate;
             _downloadUnitText =
                 download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
             debugPrint("Download: $_downloadRate | $_downloadUnitText");
-          });
-          setState(() {
+
             _uploadRate = upload.transferRate;
             _uploadUnitText = upload.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
             debugPrint("Upload: $_uploadRate | $_uploadUnitText");
           });
         },
         onProgress: (double percent, TestResult data) {
-          getLiveLocation(data);
+          if (!mounted) return;
+          if (data.type.toString() == "TestType.download") {
+            getLiveLocation(data);
+          }
           _speed =
               "Speed : ${data.transferRate} ${data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps'}";
           _loadingText =
               "Load : ${"#" * (percent / 10).floor()}${"-" * ((100 - percent) / 10).ceil()}";
           _type = data.type.toString().replaceAll(".", " : ");
+
           debugPrint("$_loadingText\t\t\t$_speed");
         },
         onError: (String errorMessage, String speedTestError) {
@@ -139,19 +149,21 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   Future<void> getLiveLocation(TestResult data) async {
     bool sameLocation = false;
 
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
-
-    serviceEnabled = await _locationController.serviceEnabled();
-    if (serviceEnabled) {
+    serviceEnabled ??= await _locationController.serviceEnabled().then((value) {
+      debugPrint("service enabled");
+      return value;
+    });
+    if (serviceEnabled!) {
       serviceEnabled = await _locationController.requestService();
+      debugPrint("requested service");
     } else {
       return;
     }
 
-    permissionGranted = await _locationController.hasPermission();
+    permissionGranted ??= await _locationController.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await _locationController.requestPermission();
+      debugPrint("requested permission");
       if (permissionGranted != PermissionStatus.granted) {
         return;
       }
