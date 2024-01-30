@@ -20,8 +20,9 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   LatLng? _livePostion;
 
   FlutterInternetSpeedTest speedTest = FlutterInternetSpeedTest();
-  String _loadingText = "";
   String _speed = "";
+  String _type = "";
+  String _loadingText = "";
 
   double _downloadRate = 0;
   double _uploadRate = 0;
@@ -32,7 +33,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   void _intervalTimer() {
     timer = Timer.periodic(
-      const Duration(seconds: 20),
+      const Duration(seconds: 15),
       (tmr) {
         getInternetSpeed();
       },
@@ -67,10 +68,15 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
                 : Center(
                     child: Column(
                       children: [
-                        const SizedBox(height: 25,),
+                        const SizedBox(
+                          height: 25,
+                        ),
                         Text(_speed),
+                        Text(_type),
                         Text(_loadingText),
-                        const SizedBox(height: 50,),
+                        const SizedBox(
+                          height: 50,
+                        ),
                         Text(wifiHeatmapEntity.wifiHeatmap.toString()),
                       ],
                     ),
@@ -88,35 +94,46 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   }
 
   Future getInternetSpeed() async {
-    await speedTest.startTesting(onStarted: () {
-      debugPrint("Starting speed test");
-    }, onCompleted: (TestResult download, TestResult upload) {
-      setState(() {
-        _downloadRate = download.transferRate;
-        _downloadUnitText = download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-        debugPrint("Download: $_downloadRate | $_downloadUnitText");
-      });
-      setState(() {
-        _uploadRate = upload.transferRate;
-        _uploadUnitText = upload.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-        debugPrint("Upload: $_uploadRate | $_uploadUnitText");
-      });
-    }, onProgress: (double percent, TestResult data) {
-      getLiveLocation(data);
-      _loadingText =
-          "Load : ${"#" * (percent / 10).floor()}${"-" * ((100 - percent) / 10).ceil()}";
-      _speed =
-          "Speed : ${data.transferRate} ${data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps'}";
-      debugPrint("$_loadingText\t\t\t$_speed");
-    }, onError: (String errorMessage, String speedTestError) {
-      debugPrint("Error: $errorMessage");
-    }, onDefaultServerSelectionInProgress: () {
-      // TODO
-      //Only when you use useFastApi parameter as true(default)
-    }, onDefaultServerSelectionDone: (Client? client) {
-      // TODO
-      //Only when you use useFastApi parameter as true(default)
-    });
+    await speedTest.startTesting(
+        useFastApi: false,
+        downloadTestServer: "http://speedtest.ftp.otenet.gr/files/test1Mb.db",
+        uploadTestServer: "http://speedtest.ftp.otenet.gr/files/test1Mb.db",
+        onStarted: () {
+          debugPrint("Starting speed test");
+        },
+        onCompleted: (TestResult download, TestResult upload) {
+          setState(() {
+            _downloadRate = download.transferRate;
+            _downloadUnitText =
+                download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+            debugPrint("Download: $_downloadRate | $_downloadUnitText");
+          });
+          setState(() {
+            _uploadRate = upload.transferRate;
+            _uploadUnitText = upload.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+            debugPrint("Upload: $_uploadRate | $_uploadUnitText");
+          });
+        },
+        onProgress: (double percent, TestResult data) {
+          getLiveLocation(data);
+          _speed =
+              "Speed : ${data.transferRate} ${data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps'}";
+          _loadingText =
+              "Load : ${"#" * (percent / 10).floor()}${"-" * ((100 - percent) / 10).ceil()}";
+          _type = data.type.toString().replaceAll(".", " : ");
+          debugPrint("$_loadingText\t\t\t$_speed");
+        },
+        onError: (String errorMessage, String speedTestError) {
+          debugPrint("Error: $errorMessage");
+        },
+        onDefaultServerSelectionInProgress: () {
+          // TODO
+          //Only when you use useFastApi parameter as true(default)
+        },
+        onDefaultServerSelectionDone: (Client? client) {
+          // TODO
+          //Only when you use useFastApi parameter as true(default)
+        });
   }
 
   Future<void> getLiveLocation(TestResult data) async {
@@ -148,23 +165,28 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
             LatLng(currentLocation.latitude!, currentLocation.longitude!);
 
         wifiHeatmapEntity.wifiHeatmap.asMap().forEach((index, locationHeight) {
+          // check if same coordinates
           if (locationHeight[0] == currentLocation.latitude &&
               locationHeight[1] == currentLocation.longitude) {
+            int repetitions = wifiHeatmapEntity.wifiHeatmap[index][3];
             wifiHeatmapEntity.wifiHeatmap[index][2] =
-                (((wifiHeatmapEntity.wifiHeatmap[index][2] +
+                (((wifiHeatmapEntity.wifiHeatmap[index][2] * repetitions +
                             data.transferRate) /
-                        2.0) as double)
+                        (repetitions + 1)) as double)
                     .toPrecision(6);
+            wifiHeatmapEntity.wifiHeatmap[index][3] = repetitions + 1;
             sameLocation = true;
             return;
           }
         });
 
+        // if new coordinate
         if (!sameLocation) {
           wifiHeatmapEntity.wifiHeatmap.add([
             currentLocation.latitude,
             currentLocation.longitude,
-            data.transferRate
+            data.transferRate,
+            1
           ]);
         }
       });
