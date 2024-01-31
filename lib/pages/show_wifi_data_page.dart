@@ -27,6 +27,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
     {0.25: Colors.blue, 0.55: Colors.red, 0.85: Colors.pink, 1.0: Colors.purple}
   ];
   WifiHeatmapEntity wifiHeatmapEntity = WifiHeatmapEntity(wifiHeatmap: []);
+  FlutterMap? map;
 
   _loadData() async {
     var str = await rootBundle.loadString('assets/initial_data.json');
@@ -39,6 +40,28 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
           .toList();
     });
     debugPrint(data.toString());
+
+    await getLiveLocation();
+    setState(() {
+      map = FlutterMap(
+        options: MapOptions(
+          initialCenter: _livePostion!,
+          initialZoom: 8.0,
+        ),
+        children: [
+          TileLayer(
+              urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+              subdomains: ['a', 'b', 'c']),
+          if (data.isNotEmpty)
+            HeatMapLayer(
+              heatMapDataSource: InMemoryHeatMapDataSource(data: data),
+              heatMapOptions:
+                  HeatMapOptions(gradient: gradients[0], minOpacity: 0.1),
+              reset: _rebuildStream.stream,
+            )
+        ],
+      );
+    });
   }
 
   @override
@@ -60,36 +83,16 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
       _rebuildStream.add(null);
     });
 
-    final map = FlutterMap(
-      options: MapOptions(
-        center: LatLng(57.8827, -6.0400),
-        zoom: 8.0,
-      ),
-      children: [
-        TileLayer(
-            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            subdomains: ['a', 'b', 'c']),
-        if (data.isNotEmpty)
-          HeatMapLayer(
-            heatMapDataSource: InMemoryHeatMapDataSource(data: data),
-            heatMapOptions:
-                HeatMapOptions(gradient: gradients[0], minOpacity: 0.1),
-            reset: _rebuildStream.stream,
-          )
-      ],
-    );
-
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.pink,
         body: Center(
-          child: Container(child: map),
+          child: Container(child: map ?? const CircularProgressIndicator()),
         ),
       ),
     );
   }
 
-  Future<void> getLiveLocation() async {
+  Future getLiveLocation() async {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 
@@ -108,17 +111,13 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
       }
     }
 
-    _locationController.onLocationChanged
-        .listen((LocationData currentLocation) {
-      if (currentLocation.latitude != null &&
-          currentLocation.longitude != null) {
-        if (!mounted) return;
-        setState(() {
-          _livePostion =
-              LatLng(currentLocation.latitude!, currentLocation.longitude!);
-        });
-        debugPrint(_livePostion.toString());
-      }
-    });
+    LocationData currentLocation = await _locationController.getLocation();
+    if (currentLocation.latitude != null && currentLocation.longitude != null) {
+      if (!mounted) return;
+      setState(() {
+        _livePostion =
+            LatLng(currentLocation.latitude!, currentLocation.longitude!);
+      });
+    }
   }
 }
