@@ -105,10 +105,11 @@ packages:
   flutter_internet_speed_test:
     dependency: "direct main"
     description:
-      name: flutter_internet_speed_test
-      sha256: "3ff71dd87f6ba607b7c93fec2c49b5a88da9da080a45628bfce15415dfb1fdb4"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "5678a6f918e03bcc0bde0d9d38012e56b190857f"
+      url: "https://github.com/luhouyang/flutter_internet_speed_test.git"
+    source: git
     version: "1.4.0"
   flutter_lints:
     dependency: "direct dev"
@@ -122,18 +123,18 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_map
-      sha256: "52c65a977daae42f9aae6748418dd1535eaf27186e9bac9bf431843082bc75a3"
+      sha256: cda8d72135b697f519287258b5294a57ce2f2a5ebf234f0e406aad4dc14c9399
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "6.1.0"
   flutter_map_heatmap:
     dependency: "direct main"
     description:
       name: flutter_map_heatmap
-      sha256: "9f8f6441b1512918c53751afe2660c00fb59a823c59ebf6ce779e51196b10aa3"
+      sha256: "0544a980da9d29ec41bd27f507e46655306d0499dfb98379497f9360a139da39"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.5"
+    version: "0.0.7"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -148,10 +149,10 @@ packages:
     dependency: transitive
     description:
       name: http
-      sha256: "5895291c13fa8a3bd82e76d5627f69e0d85ca6a30dcac95c4ea19a5d555879c2"
+      sha256: a2bbf9d017fcced29139daa8ed2bba4ece450ab222871df93ca9eec6f80c34ba
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.6"
+    version: "1.2.0"
   http_parser:
     dependency: transitive
     description:
@@ -180,10 +181,10 @@ packages:
     dependency: "direct main"
     description:
       name: latlong2
-      sha256: "08ef7282ba9f76e8495e49e2dc4d653015ac929dce5f92b375a415d30b407ea0"
+      sha256: "18712164760cee655bc790122b0fd8f3d5b3c36da2cb7bf94b68a197fbb0811b"
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.2"
+    version: "0.9.0"
   lints:
     dependency: transitive
     description:
@@ -228,10 +229,10 @@ packages:
     dependency: transitive
     description:
       name: logger
-      sha256: "7ad7215c15420a102ec687bb320a7312afd449bac63bfb1c60d9787c27b9767f"
+      sha256: "6bbb9d6f7056729537a4309bda2e74e18e5d9f14302489cc1e93f33b3fe32cac"
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.0"
+    version: "2.0.2+1"
   matcher:
     dependency: transitive
     description:
@@ -365,14 +366,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.1"
-  tuple:
-    dependency: transitive
-    description:
-      name: tuple
-      sha256: a97ce2013f240b2f3807bcbaf218765b6f301c3eff91092bcfa23a039e7dd151
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.2"
   tuple_dart:
     dependency: transitive
     description:
@@ -431,4 +424,4 @@ packages:
     version: "6.5.0"
 sdks:
   dart: ">=3.2.3 <4.0.0"
-  flutter: ">=3.3.0"
+  flutter: ">=3.10.0"
