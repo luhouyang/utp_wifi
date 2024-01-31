@@ -1,12 +1,16 @@
 # Wifi speed meter & Heatmap Analytics
 
-# Add Data Page
+## Add Data Page
 
-## Measure wifi connection strength & stores it with Latitude/Longitude data
-
-
+### Measure wifi connection strength & stores it with Latitude/Longitude data
 
 
-# View Data Page
+add pictures here
 
-## Loads json data, overlays as Heatmap over a map 
+
+## View Data Page
+
+### Loads json data, overlays as Heatmap over a map
+
+
+add pictures here
