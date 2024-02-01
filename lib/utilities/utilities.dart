@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:utp_wifi/entities/wifi_heatmap_entity.dart';
 
 class Utilities {
@@ -7,8 +6,8 @@ class Utilities {
     return "${dateTime.day}_${dateTime.month}_${dateTime.year}";
   }
 
-  WifiHeatmapEntity mergedHeatmap(
-      WifiHeatmapEntity newWHE, WifiHeatmapEntity oldWHE) {
+  Future<WifiHeatmapEntity> mergedHeatmap(
+      WifiHeatmapEntity newWHE, WifiHeatmapEntity oldWHE) async {
     bool sameLocation = false;
 
     newWHE.wifiHeatmap.asMap().forEach((newIndex, newLocationHeight) {
@@ -32,7 +31,6 @@ class Utilities {
         oldWHE.wifiHeatmap.add([newLocationHeight]);
       }
     });
-
     return oldWHE;
   }
 }

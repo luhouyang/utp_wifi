@@ -14,33 +14,37 @@ class StorageServices {
     final folderName = Utilities().parseDateToString(newWHE.dateTime);
     final folderRef = storageRef.child(folderName);
 
-    String? downloadDirectory;
-    if (Platform.isAndroid) {
-      final externalStorageFolder = await getExternalStorageDirectory();
-      if (externalStorageFolder != null) {
-        downloadDirectory = p.join(externalStorageFolder.path, "Downloads");
-      }
-    } else {
-      final downloadFolder = await getDownloadsDirectory();
-      if (downloadFolder != null) {
-        downloadDirectory = downloadFolder.path;
-      }
-    }
+    try {
+      await folderRef.getDownloadURL().then((value) async {
+        String? downloadDirectory;
+        if (Platform.isAndroid) {
+          final externalStorageFolder = await getExternalStorageDirectory();
+          if (externalStorageFolder != null) {
+            downloadDirectory = p.join(externalStorageFolder.path, "Downloads");
+          }
+        } else {
+          final downloadFolder = await getDownloadsDirectory();
+          if (downloadFolder != null) {
+            downloadDirectory = downloadFolder.path;
+          }
+        }
 
-    File(downloadDirectory! + '/$folderName')
-      ..createSync(recursive: true)
-      ..writeAsStringSync("placeholder");
+        File(downloadDirectory! + '/$folderName')
+          ..createSync(recursive: true)
+          ..writeAsStringSync("placeholder");
 
-    final file = File(downloadDirectory + '/$folderName');
-    debugPrint(file.path);
+        final file = File(downloadDirectory + '/$folderName');
+        
 
-    var result = folderRef.getDownloadURL().then((value) async {
-      WifiHeatmapEntity? oldWHE =
-          await tryFetchData(folderRef, file, newWHE.dateTime);
-      debugPrint(oldWHE!.wifiHeatmap.toString());
-    }).catchError((onError) async {
+        WifiHeatmapEntity? oldWHE =
+            await tryFetchData(folderRef, file, newWHE.dateTime);
+        
+        WifiHeatmapEntity merged = await Utilities().mergedHeatmap(newWHE, oldWHE!);
+        await folderRef.putString(merged.wifiHeatmap.toString());
+      });
+    } catch (e) {
       await folderRef.putString(newWHE.wifiHeatmap.toString());
-    });
+    }
   }
 
   Future<WifiHeatmapEntity?> tryFetchData(
@@ -56,7 +60,6 @@ class StorageServices {
           // TODO: Handle this case.
           break;
         case TaskState.success:
-          debugPrint(await file.readAsString());
           retrievedWHE = WifiHeatmapEntity(
               wifiHeatmap: jsonDecode(await file.readAsString()),
               dateTime: dateTime);

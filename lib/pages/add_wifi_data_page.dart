@@ -95,8 +95,8 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
                       height: 25,
                     ),
                     IconButton(
-                        onPressed: () {
-                          storageServices.postToStorage(wifiHeatmapEntity);
+                        onPressed: () async {
+                          await storageServices.postToStorage(wifiHeatmapEntity);
                         },
                         icon: const Icon(Icons.upload_file_rounded))
                   ],
@@ -133,13 +133,15 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
           if (data.type.toString() == "TestType.download") {
             getLiveLocation(data);
           }
-          _speed =
+          setState(() {
+            _speed =
               "Speed : ${data.transferRate} ${data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps'}";
           _loadingText =
               "Load : ${"#" * (percent / 10).floor()}${"-" * ((100 - percent) / 10).ceil()}";
           _type = data.type.toString().replaceAll(".", " : ");
 
           debugPrint("$_loadingText\t\t\t$_speed");
+          });
         },
         onError: (String errorMessage, String speedTestError) {
           debugPrint("Error: $errorMessage");
