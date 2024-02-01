@@ -24,7 +24,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   List<WeightedLatLng> data = [];
   List<Map<double, MaterialColor>> gradients = [
     HeatMapOptions.defaultGradient,
-    {0.25: Colors.blue, 0.55: Colors.red, 0.85: Colors.pink, 1.0: Colors.purple}
+    {5.0: Colors.yellow, 3.0: Colors.blue, 1.0: Colors.pink, 0.25: Colors.purple}
   ];
   WifiHeatmapEntity? wifiHeatmapEntity;
   FlutterMap? map;
@@ -48,7 +48,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
       map = FlutterMap(
         options: MapOptions(
           initialCenter: _livePostion!,
-          initialZoom: 8.0,
+          initialZoom: 4.0,
         ),
         children: [
           TileLayer(
@@ -58,7 +58,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
             HeatMapLayer(
               heatMapDataSource: InMemoryHeatMapDataSource(data: data),
               heatMapOptions:
-                  HeatMapOptions(gradient: gradients[0], minOpacity: 0.1),
+                  HeatMapOptions(gradient: gradients[0], minOpacity: 0),
               reset: _rebuildStream.stream,
             )
         ],
