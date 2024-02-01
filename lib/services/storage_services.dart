@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:utp_wifi/entities/wifi_heatmap_entity.dart';
 import 'package:utp_wifi/utilities/utilities.dart';
+import 'package:path/path.dart' as p;
 
 class StorageServices {
   Reference storageRef = FirebaseStorage.instance.ref();
@@ -12,9 +13,26 @@ class StorageServices {
   Future<void> postToStorage(WifiHeatmapEntity newWHE) async {
     final folderName = Utilities().parseDateToString(newWHE.dateTime);
     final folderRef = storageRef.child(folderName);
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final filePath = "${appDocDir.absolute}/$folderName.json";
-    final file = File(filePath);
+
+    String? downloadDirectory;
+    if (Platform.isAndroid) {
+      final externalStorageFolder = await getExternalStorageDirectory();
+      if (externalStorageFolder != null) {
+        downloadDirectory = p.join(externalStorageFolder.path, "Downloads");
+      }
+    } else {
+      final downloadFolder = await getDownloadsDirectory();
+      if (downloadFolder != null) {
+        downloadDirectory = downloadFolder.path;
+      }
+    }
+
+    File(downloadDirectory! + '/$folderName')
+      ..createSync(recursive: true)
+      ..writeAsStringSync("placeholder");
+
+    final file = File(downloadDirectory + '/$folderName');
+    debugPrint(file.path);
 
     var result = folderRef.getDownloadURL().then((value) async {
       WifiHeatmapEntity? oldWHE =
