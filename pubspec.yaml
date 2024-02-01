@@ -26,6 +26,7 @@ dependencies:
   flutter_map_heatmap: ^0.0.7
   firebase_core: ^2.25.0
   firebase_storage: ^11.6.1
+  path_provider: ^2.1.2
   
 
 dev_dependencies:

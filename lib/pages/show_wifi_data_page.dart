@@ -26,7 +26,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
     HeatMapOptions.defaultGradient,
     {0.25: Colors.blue, 0.55: Colors.red, 0.85: Colors.pink, 1.0: Colors.purple}
   ];
-  WifiHeatmapEntity wifiHeatmapEntity = WifiHeatmapEntity(wifiHeatmap: []);
+  WifiHeatmapEntity? wifiHeatmapEntity;
   FlutterMap? map;
 
   _loadData() async {

@@ -17,9 +17,11 @@ class Utilities {
         if (newLocationHeight[0] == oldLocationHeight[0] &&
             newLocationHeight[1] == oldLocationHeight[1]) {
           int repetitions = newLocationHeight[3] + oldLocationHeight[3];
-          oldWHE.wifiHeatmap[oldIndex][2] = (((newLocationHeight[2] * newLocationHeight[3]) +
-                  (oldLocationHeight[2] * oldLocationHeight[3])) /
-              repetitions).toPrecision(6);
+          oldWHE.wifiHeatmap[oldIndex][2] =
+              (((newLocationHeight[2] * newLocationHeight[3]) +
+                          (oldLocationHeight[2] * oldLocationHeight[3])) /
+                      repetitions)
+                  .toPrecision(6);
           sameLocation = true;
           return;
         }
@@ -27,11 +29,11 @@ class Utilities {
 
       // if new coordinate
       if (!sameLocation) {
-        oldWHE.wifiHeatmap.add([
-          newLocationHeight
-        ]);
+        oldWHE.wifiHeatmap.add([newLocationHeight]);
       }
     });
+
+    return oldWHE;
   }
 }
 

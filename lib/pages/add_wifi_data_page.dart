@@ -59,7 +59,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   @override
   void dispose() {
     debugPrint("$wifiHeatmapEntity add page");
-    storageServices.postToStorage(wifiHeatmapEntity);
+    //storageServices.postToStorage(wifiHeatmapEntity);
     timer.cancel();
     super.dispose();
   }
@@ -67,43 +67,43 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: Scaffold(
-            body: _livePostion == null
-                ? () {
-                    setState(() {
-                      serviceEnabled = null;
-                    });
-                    Center(
-                      child: Text(
-                          "Location Permission: ${permissionGranted == PermissionStatus.granted ? "Permission Granted" : "Not Granted"}"),
-                    );
-                  }()
-                : Center(
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 25,
-                        ),
-                        Text(_speed),
-                        Text(_type),
-                        Text(_loadingText),
-                        const SizedBox(
-                          height: 50,
-                        ),
-                        Text(wifiHeatmapEntity.wifiHeatmap.toString()),
-                      ],
+      child: Scaffold(
+        body: _livePostion == null
+            ? () {
+                setState(() {
+                  serviceEnabled = null;
+                });
+                Center(
+                  child: Text(
+                      "Location Permission: ${permissionGranted == PermissionStatus.granted ? "Permission Granted" : "Not Granted"}"),
+                );
+              }()
+            : Center(
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 25,
                     ),
-                  ) /*GoogleMap(
-              initialCameraPosition:
-                  CameraPosition(target: _livePostion!, zoom: 15),
-              markers: {
-                Marker(
-                    markerId: const MarkerId("user"),
-                    icon: BitmapDescriptor.defaultMarker,
-                    position: _livePostion!),
-              },
-            ),*/
-            ));
+                    Text(_speed),
+                    Text(_type),
+                    Text(_loadingText),
+                    const SizedBox(
+                      height: 50,
+                    ),
+                    Text(wifiHeatmapEntity.wifiHeatmap.toString()),
+                    const SizedBox(
+                      height: 25,
+                    ),
+                    IconButton(
+                        onPressed: () {
+                          storageServices.postToStorage(wifiHeatmapEntity);
+                        },
+                        icon: const Icon(Icons.upload_file_rounded))
+                  ],
+                ),
+              ),
+      ),
+    );
   }
 
   Future getInternetSpeed() async {
