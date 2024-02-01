@@ -28,7 +28,7 @@ class Utilities {
 
       // if new coordinate
       if (!sameLocation) {
-        oldWHE.wifiHeatmap.add([newLocationHeight]);
+        oldWHE.wifiHeatmap.add(newLocationHeight);
       }
     });
     return oldWHE;

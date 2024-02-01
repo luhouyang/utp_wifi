@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
@@ -32,14 +31,15 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
 
   _loadData() async {
     wifiHeatmapEntity = await StorageServices().fetchData();
-    //var str = await rootBundle.loadString('assets/initial_data.json');
-    List<dynamic> result = jsonDecode(wifiHeatmapEntity!.wifiHeatmap.toString());
+    List<dynamic> result =
+        jsonDecode(wifiHeatmapEntity!.wifiHeatmap.toString());
+    debugPrint(result.toString());
 
     setState(() {
-      data = result
-          .map((e) => e as List<dynamic>)
-          .map((e) => WeightedLatLng(LatLng(e[0], e[1]), 1))
-          .toList();
+      result.asMap().forEach((index, heightLocation) {
+        data.add(WeightedLatLng(
+            LatLng(heightLocation[0], heightLocation[1]), heightLocation[2]));
+      });
     });
     debugPrint(data.toString());
 
@@ -63,7 +63,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
             )
         ],
       );
-    }); 
+    });
   }
 
   @override
