@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "95981562376",
+    "project_id": "internet-heatmap",
+    "storage_bucket": "internet-heatmap.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:95981562376:android:fd296af14d6b5277bfbfbd",
+        "android_client_info": {
+          "package_name": "com.example.utp_wifi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAt-pYBPFsQXRcW57ZtdLDeuUzI-7BBtnA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

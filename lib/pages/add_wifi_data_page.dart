@@ -5,6 +5,7 @@ import 'package:flutter_internet_speed_test/flutter_internet_speed_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:utp_wifi/entities/wifi_heatmap_entity.dart';
+import 'package:utp_wifi/services/storage_services.dart';
 
 class AddWifiDataPage extends StatefulWidget {
   const AddWifiDataPage({super.key});
@@ -31,7 +32,13 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   String _downloadUnitText = 'Mbps';
   String _uploadUnitText = 'Mbps';
 
-  WifiHeatmapEntity wifiHeatmapEntity = WifiHeatmapEntity(wifiHeatmap: []);
+  WifiHeatmapEntity wifiHeatmapEntity = WifiHeatmapEntity(
+    wifiHeatmap: [],
+    dateTime:
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+  );
+
+  StorageServices storageServices = StorageServices();
 
   void _intervalTimer() {
     timer = Timer.periodic(
@@ -52,6 +59,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
   @override
   void dispose() {
     debugPrint("$wifiHeatmapEntity add page");
+    storageServices.postToStorage(wifiHeatmapEntity);
     timer.cancel();
     super.dispose();
   }
