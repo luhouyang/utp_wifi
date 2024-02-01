@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:flutter_map_heatmap/flutter_map_heatmap.dart';
 import 'package:utp_wifi/entities/wifi_heatmap_entity.dart';
+import 'package:utp_wifi/services/storage_services.dart';
 
 class ShowWifiDataPage extends StatefulWidget {
   const ShowWifiDataPage({super.key});
@@ -30,8 +31,9 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   FlutterMap? map;
 
   _loadData() async {
-    var str = await rootBundle.loadString('assets/initial_data.json');
-    List<dynamic> result = jsonDecode(str);
+    wifiHeatmapEntity = await StorageServices().fetchData();
+    //var str = await rootBundle.loadString('assets/initial_data.json');
+    List<dynamic> result = jsonDecode(wifiHeatmapEntity!.wifiHeatmap.toString());
 
     setState(() {
       data = result
@@ -61,7 +63,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
             )
         ],
       );
-    });
+    }); 
   }
 
   @override
