@@ -43,7 +43,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   FlutterMap? map;
 
   // date
-  DateTime dateSelection = DateTime(1, 1, 1);
+  DateTime dateSelection = DateTime.now();
 
   @override
   void initState() {
