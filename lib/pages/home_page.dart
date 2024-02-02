@@ -27,10 +27,10 @@ class _HomePageState extends State<HomePage> {
             Icons.map_sharp,
           ],
           gapLocation: GapLocation.none,
-          notchSmoothness: NotchSmoothness.softEdge,
+          notchSmoothness: NotchSmoothness.sharpEdge,
           blurEffect: true,
-          leftCornerRadius: 20,
-          rightCornerRadius: 20,
+          leftCornerRadius: 0,
+          rightCornerRadius: 0,
           onTap: (index) {
             setState(() {
               pageIdx = index;

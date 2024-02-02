@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:location/location.dart';
 import 'package:flutter_map_heatmap/flutter_map_heatmap.dart';
 import 'package:utp_wifi/entities/wifi_heatmap_entity.dart';
@@ -41,9 +42,12 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   // hybrid map
   FlutterMap? map;
 
+  // date
+  DateTime dateSelection = DateTime(1, 1, 1);
+
   @override
   void initState() {
-    _loadData(); // initialize data
+    _hybridMap(); // initialize data
     super.initState();
   }
 
@@ -61,21 +65,125 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
 
     return SafeArea(
       child: Scaffold(
-        body: Center(
-          child: Container(
-              child: map ??
-                  const CircularProgressIndicator(
-                    color: Colors.amber,
-                  )),
+        body: Stack(
+          children: [
+            Center(
+              child: Container(
+                  child: map ??
+                      LoadingAnimationWidget.beat(
+                        size: 60,
+                        color: Colors.amber,
+                      )),
+            ),
+            if (map != null && data.isEmpty)
+              Center(
+                child: LoadingAnimationWidget.threeArchedCircle(
+                  size: 60,
+                  color: Colors.amber,
+                ),
+              ),
+            Positioned(
+              top: 25,
+              right: 25,
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () async {
+                      final DateTime? date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2024, 2, 2),
+                        lastDate: DateTime(10000, 1, 1),
+                      );
+                      if (date != null) {
+                        setState(() {
+                          dateSelection = date;
+                        });
+                      }
+                      await _loadData();
+                      debugPrint(
+                          "Datetime: ${date.toString()}"); // TODO: delete in production
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0),
+                        color: Colors.amber,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text(
+                            dateSelection.toString().split(" ")[0],
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          const Icon(
+                            Icons.date_range,
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  InkWell(
+                    onHover: (value) {},
+                    onTap: () async {
+                      setState(() {
+                        dateSelection = DateTime(1, 1, 1);
+                      });
+                      await _loadData();
+                      debugPrint(
+                          "Datetime: ${dateSelection.toString()}"); // TODO: delete in production
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0),
+                        color: Colors.amber,
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text(
+                            "Average",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Icon(
+                            Icons.stacked_bar_chart,
+                            color: Colors.black,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // initialize heatmap, geo location, hybrid map
-  _loadData() async {
+  // load heatmap
+  Future<void> _loadData() async {
+    data.clear();
+
     // load today's heatmap data fropm firebase storage
-    wifiHeatmapEntity = await StorageServices().fetchData();
+    wifiHeatmapEntity = await StorageServices().fetchData(dateSelection);
 
     // decode string to list "[[], [], []]" => [[], [], []]
     List<dynamic> result =
@@ -86,6 +194,14 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
       data.add(WeightedLatLng(
           LatLng(heightLocation[0], heightLocation[1]), heightLocation[2]));
     });
+
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  // initialize heatmap, geo location, hybrid map
+  _hybridMap() async {
+    await _loadData();
 
     // get geo location
     await getLiveLocation();
@@ -106,8 +222,11 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
             HeatMapLayer(
               maxZoom: 30.0,
               heatMapDataSource: InMemoryHeatMapDataSource(data: data),
-              heatMapOptions:
-                  HeatMapOptions(gradient: gradients[1], minOpacity: 0, blurFactor: 0, radius: 10),
+              heatMapOptions: HeatMapOptions(
+                  gradient: gradients[1],
+                  minOpacity: 0,
+                  blurFactor: 0,
+                  radius: 10),
               reset: _rebuildStream.stream,
             )
         ],

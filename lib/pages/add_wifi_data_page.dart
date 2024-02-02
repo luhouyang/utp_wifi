@@ -5,6 +5,7 @@ import 'package:flutter_internet_speed_test/flutter_internet_speed_test.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:location/location.dart';
 import 'package:utp_wifi/entities/wifi_heatmap_entity.dart';
 import 'package:utp_wifi/services/storage_services.dart';
@@ -17,9 +18,6 @@ class AddWifiDataPage extends StatefulWidget {
 }
 
 class _AddWifiDataPageState extends State<AddWifiDataPage> {
-  // update stream
-  final StreamController<void> _rebuildStream = StreamController.broadcast();
-
   // timer to start speed test periodically
   late Timer timer;
 
@@ -52,12 +50,11 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   // hybrid map
   FlutterMap? map;
-  bool mapCreated = false;
 
   // speed test periodic timer
   void _intervalTimer() {
     timer = Timer.periodic(
-      const Duration(seconds: 15),
+      const Duration(milliseconds: 250),
       (tmr) {
         getInternetSpeed();
       },
@@ -66,14 +63,12 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   @override
   void initState() {
-    getInternetSpeed();
     _intervalTimer();
     super.initState();
   }
 
   @override
   void dispose() {
-    _rebuildStream.close();
     //storageServices.postToStorage(wifiHeatmapEntity);
     timer.cancel();
     super.dispose();
@@ -81,84 +76,83 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _rebuildStream.add(null);
-    });
-
     return SafeArea(
       child: Scaffold(
-        body: _livePostion == null
-            ? Center(
-                child: Text(
-                    "Location Permission: $permissionGranted\nWaiting For Speed Test"),
-              )
-            : Stack(
-                children: [
-                  mapCreated
-                      ? Container(
-                          child: map,
-                        )
-                      : const Text("map loading"),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Text(_speed),
-                          Text(_type),
-                          Text(_loadingText),
-                          Text("No. Data: ${wifiHeatmapEntity.wifiHeatmap.length}"),
-                          const SizedBox(
-                            height: 25,
-                          ),
-                          Text(wifiHeatmapEntity.wifiHeatmap
-                              .toString()
-                              .lastChars(150),),
-                          const Expanded(
-                            child: SizedBox(),
-                          ),
-                          InkWell(
-                              onHover: (value) {},
-                              onTap: () async {
-                                await storageServices
-                                    .postToStorage(wifiHeatmapEntity);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    color: Colors.amber),
-                                margin:
-                                    const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                                padding:
-                                    const EdgeInsets.fromLTRB(10, 10, 5, 10),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text("Post Data"),
-                                    Icon(Icons.upload_file_rounded),
-                                  ],
-                                ),
-                              ))
-                        ],
-                      ),
+        body: Stack(
+          children: [
+            Center(
+              child: Container(
+                child: map ??
+                    LoadingAnimationWidget.beat(
+                      size: 60,
+                      color: Colors.amber,
                     ),
-                  ),
-                ],
               ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_speed),
+                        Text(_type),
+                        Text(_loadingText),
+                        Text(
+                            "Num Data: ${wifiHeatmapEntity.wifiHeatmap.length}"),
+                        const SizedBox(
+                          height: 25,
+                        ),
+                        Text(
+                          wifiHeatmapEntity.wifiHeatmap
+                              .toString()
+                              .lastChars(150),
+                        ),
+                      ],
+                    ),
+                    const Expanded(
+                      child: SizedBox(),
+                    ),
+                    InkWell(
+                        onHover: (value) {},
+                        onTap: () async {
+                          await storageServices
+                              .postToStorage(wifiHeatmapEntity);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8.0),
+                              color: Colors.amber),
+                          margin: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                          padding: const EdgeInsets.fromLTRB(10, 10, 5, 10),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("Post Data"),
+                              Icon(Icons.upload_file_rounded),
+                            ],
+                          ),
+                        ))
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // internet speed
   Future getInternetSpeed() async {
-    await speedTest.startTesting(
+    speedTest.startTesting(
         useFastApi: false,
         downloadTestServer: "http://speedtest.ftp.otenet.gr/files/test1Mb.db",
         uploadTestServer: "http://speedtest.ftp.otenet.gr/files/test1Mb.db",
         onStarted: () {
+          if (!mounted) return;
           debugPrint("Starting speed test");
         },
         onCompleted: (TestResult download, TestResult upload) {
@@ -179,7 +173,8 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
           if (!mounted) return;
 
           // only get location data when return download speed
-          if (data.type.toString() == "TestType.download") {
+          if (data.type.toString() == "TestType.download" &&
+              data.transferRate != 0) {
             getLiveLocationAndStoreData(data);
           }
 
@@ -195,6 +190,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
           });
         },
         onError: (String errorMessage, String speedTestError) {
+          if (!mounted) return;
           debugPrint("Error: $errorMessage");
         });
   }
@@ -209,7 +205,6 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
     });
     if (serviceEnabled!) {
       serviceEnabled = await _locationController.requestService();
-      debugPrint("requested service");
     } else {
       return;
     }
@@ -233,9 +228,8 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
             LatLng(currentLocation.latitude!, currentLocation.longitude!);
 
         // create map (only run once for each refresh)
-        if (_livePostion != null && !mapCreated) {
+        if (_livePostion != null && map == null) {
           _loadData();
-          mapCreated = true;
         }
 
         // check if same coordinates
@@ -331,5 +325,6 @@ extension Precision on double {
 }
 
 extension E on String {
-  String lastChars(int n) => (n >= length) ? substring(1) : substring(length - n);
+  String lastChars(int n) =>
+      (n >= length) ? substring(1) : substring(length - n);
 }

@@ -21,6 +21,7 @@ class Utilities {
                           (oldLocationHeight[2] * oldLocationHeight[3])) /
                       repetitions)
                   .toPrecision(6);
+          oldWHE.wifiHeatmap[oldIndex][3] = repetitions;
           sameLocation = true;
           return;
         }

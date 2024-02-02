@@ -10,10 +10,9 @@ import 'package:path/path.dart' as p;
 class StorageServices {
   Reference storageRef = FirebaseStorage.instance.ref();
 
-  Future<WifiHeatmapEntity> fetchData() async {
-    final DateTime dateTime =
-        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-    final folderName = Utilities().parseDateToString(dateTime);
+  // used to view data
+  Future<WifiHeatmapEntity> fetchData(DateTime dateTime) async {
+    final String folderName = Utilities().parseDateToString(dateTime);
     final folderRef = storageRef.child(folderName);
 
     String? downloadDirectory;
@@ -64,10 +63,14 @@ class StorageServices {
     return retrievedWHE;
   }
 
+  // used to add data
   Future<void> postToStorage(WifiHeatmapEntity newWHE) async {
     final folderName = Utilities().parseDateToString(newWHE.dateTime);
     final folderRef = storageRef.child(folderName);
+    final averageName = Utilities().parseDateToString(DateTime(1, 1, 1));
+    final averageFolderRef = storageRef.child("1_1_1");
 
+    // post individual date
     try {
       await folderRef.getDownloadURL().then((value) async {
         String? downloadDirectory;
@@ -98,6 +101,39 @@ class StorageServices {
       });
     } catch (e) {
       await folderRef.putString(newWHE.wifiHeatmap.toString());
+    }
+
+    // post average
+    try {
+      await averageFolderRef.getDownloadURL().then((value) async {
+        String? downloadDirectory;
+        if (Platform.isAndroid) {
+          final externalStorageFolder = await getExternalStorageDirectory();
+          if (externalStorageFolder != null) {
+            downloadDirectory = p.join(externalStorageFolder.path, "Downloads");
+          }
+        } else {
+          final downloadFolder = await getDownloadsDirectory();
+          if (downloadFolder != null) {
+            downloadDirectory = downloadFolder.path;
+          }
+        }
+
+        File(downloadDirectory! + '/$averageName')
+          ..createSync(recursive: true)
+          ..writeAsStringSync("placeholder");
+
+        final file = File(downloadDirectory + '/$averageName');
+
+        WifiHeatmapEntity? oldWHE =
+            await tryFetchData(averageFolderRef, file, DateTime(1, 1, 1));
+
+        WifiHeatmapEntity merged =
+            await Utilities().mergedHeatmap(newWHE, oldWHE!);
+        await averageFolderRef.putString(merged.wifiHeatmap.toString());
+      });
+    } catch (e) {
+      await averageFolderRef.putString(newWHE.wifiHeatmap.toString());
     }
   }
 
