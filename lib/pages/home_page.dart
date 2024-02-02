@@ -1,3 +1,4 @@
+import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:utp_wifi/pages/add_wifi_data_page.dart';
 import 'package:utp_wifi/pages/show_wifi_data_page.dart';
@@ -16,22 +17,25 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: changePage(pageIdx),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (value) {
-          setState(() {
-            pageIdx = value;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_chart_rounded),
-            label: "Add Data",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map_sharp),
-            label: "Show Data",
-          ),
-        ]),
+      bottomNavigationBar: AnimatedBottomNavigationBar(
+          backgroundColor: Colors.grey[200],
+          activeColor: Colors.amber,
+          inactiveColor: Colors.black,
+          activeIndex: pageIdx,
+          icons: const [
+            Icons.add_chart_rounded,
+            Icons.map_sharp,
+          ],
+          gapLocation: GapLocation.none,
+          notchSmoothness: NotchSmoothness.softEdge,
+          blurEffect: true,
+          leftCornerRadius: 20,
+          rightCornerRadius: 20,
+          onTap: (index) {
+            setState(() {
+              pageIdx = index;
+            });
+          }),
     );
   }
 

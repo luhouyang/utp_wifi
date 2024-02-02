@@ -41,10 +41,10 @@ class StorageServices {
       final downloadTask = await folderRef.writeToFile(file);
       switch (downloadTask.state) {
         case TaskState.running:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
         case TaskState.paused:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
         case TaskState.success:
           retrievedWHE = WifiHeatmapEntity(
@@ -52,10 +52,10 @@ class StorageServices {
               dateTime: dateTime);
           break;
         case TaskState.canceled:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
         case TaskState.error:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
       }
     } catch (e) {
@@ -108,10 +108,10 @@ class StorageServices {
       final downloadTask = await folderRef.writeToFile(file);
       switch (downloadTask.state) {
         case TaskState.running:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
         case TaskState.paused:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
         case TaskState.success:
           retrievedWHE = WifiHeatmapEntity(
@@ -119,10 +119,10 @@ class StorageServices {
               dateTime: dateTime);
           break;
         case TaskState.canceled:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
         case TaskState.error:
-          // TODO: Handle this case.
+          debugPrint("Firebase State: ${downloadTask.state}");
           break;
       }
       return retrievedWHE;
