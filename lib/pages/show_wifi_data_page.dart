@@ -19,7 +19,7 @@ class ShowWifiDataPage extends StatefulWidget {
 class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   // geo location
   final Location _locationController = Location();
-  LatLng? _livePostion;
+  LatLng? livePostion;
   PermissionStatus? permissionGranted;
   bool? serviceEnabled;
 
@@ -210,7 +210,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
       // create hybrid map
       map = FlutterMap(
         options: MapOptions(
-          initialCenter: _livePostion!,
+          initialCenter: livePostion!,
           initialZoom: 18.0,
         ),
         children: [
@@ -226,7 +226,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
                   gradient: gradients[1],
                   minOpacity: 0,
                   blurFactor: 0,
-                  radius: 10),
+                  radius: 5),
               reset: _rebuildStream.stream,
             )
         ],
@@ -255,7 +255,7 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
     if (currentLocation.latitude != null && currentLocation.longitude != null) {
       if (!mounted) return;
       setState(() {
-        _livePostion =
+        livePostion =
             LatLng(currentLocation.latitude!, currentLocation.longitude!);
       });
     }

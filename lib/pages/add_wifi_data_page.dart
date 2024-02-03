@@ -23,7 +23,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   // geo location
   final Location _locationController = Location();
-  LatLng? _livePostion;
+  LatLng? livePostion;
   PermissionStatus? permissionGranted;
   bool? serviceEnabled;
 
@@ -50,6 +50,9 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
 
   // hybrid map
   FlutterMap? map;
+
+  // uploading data
+  bool _uploading = false;
 
   // speed test periodic timer
   void _intervalTimer() {
@@ -89,6 +92,13 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
                     ),
               ),
             ),
+            if (_uploading)
+              Center(
+                child: LoadingAnimationWidget.threeArchedCircle(
+                  size: 60,
+                  color: Colors.amber,
+                ),
+              ),
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -118,8 +128,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
                     InkWell(
                         onHover: (value) {},
                         onTap: () async {
-                          await storageServices
-                              .postToStorage(wifiHeatmapEntity);
+                          postData();
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -143,6 +152,21 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
         ),
       ),
     );
+  }
+
+  // post data
+  Future<void> postData() async {
+    setState(() {
+      _uploading = true;
+    });
+
+    await storageServices.postToStorage(wifiHeatmapEntity);
+
+    wifiHeatmapEntity.wifiHeatmap = [];
+
+    setState(() {
+      _uploading = false;
+    });
   }
 
   // internet speed
@@ -224,11 +248,11 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
     if (currentLocation.latitude != null && currentLocation.longitude != null) {
       if (!mounted) return;
       setState(() {
-        _livePostion =
+        livePostion =
             LatLng(currentLocation.latitude!, currentLocation.longitude!);
 
         // create map (only run once for each refresh)
-        if (_livePostion != null && map == null) {
+        if (livePostion != null && map == null) {
           _loadData();
         }
 
@@ -270,7 +294,7 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
       // create hybrid map
       map = FlutterMap(
         options: MapOptions(
-          initialCenter: _livePostion!,
+          initialCenter: livePostion!,
           initialZoom: 18.0,
         ),
         children: [
