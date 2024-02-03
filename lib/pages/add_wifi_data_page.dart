@@ -160,9 +160,11 @@ class _AddWifiDataPageState extends State<AddWifiDataPage> {
       _uploading = true;
     });
 
-    await storageServices.postToStorage(wifiHeatmapEntity);
-
-    wifiHeatmapEntity.wifiHeatmap = [];
+    await storageServices.postToStorage(wifiHeatmapEntity).then((value) {
+      wifiHeatmapEntity.wifiHeatmap = [];
+    }).onError((error, stackTrace) {
+      debugPrint("Error: $error");
+    });
 
     setState(() {
       _uploading = false;
