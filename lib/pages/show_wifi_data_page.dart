@@ -271,8 +271,8 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
               heatMapDataSource: InMemoryHeatMapDataSource(data: data),
               heatMapOptions: HeatMapOptions(
                   gradient: gradients[1],
-                  minOpacity: 0.3,
-                  blurFactor: 0.8,
+                  minOpacity: 0.2,
+                  blurFactor: 0.3,
                   radius: 3),
               reset: _rebuildStream.stream,
             )
