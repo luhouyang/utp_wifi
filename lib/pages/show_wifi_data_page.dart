@@ -31,10 +31,10 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   List<Map<double, MaterialColor>> gradients = [
     HeatMapOptions.defaultGradient,
     {
-      0.25: Colors.purple,
-      0.5: Colors.pink,
-      0.75: Colors.blue,
-      1.0: Colors.yellow,
+      0.25: Colors.red,
+      0.55: Colors.yellow,
+      0.85: Colors.green,
+      1.0: Colors.blue
     }
   ];
   WifiHeatmapEntity? wifiHeatmapEntity;
@@ -42,8 +42,14 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
   // hybrid map
   FlutterMap? map;
 
-  // date
+  // heatmap gradient scale
+  double min = 100;
+  double max = 0;
+
+  // date filter
   DateTime dateSelection = DateTime.now();
+
+  // floor filter
 
   @override
   void initState() {
@@ -83,8 +89,8 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
                 ),
               ),
             Positioned(
-              top: 25,
-              right: 25,
+              top: 0,
+              right: 10,
               child: Row(
                 children: [
                   InkWell(
@@ -101,13 +107,13 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
                         });
                       }
                       await _loadData();
-                      debugPrint(
-                          "Datetime: ${date.toString()}"); // TODO: delete in production
                     },
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.0),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(8.0),
+                            bottomRight: Radius.circular(8.0)),
                         color: Colors.amber,
                       ),
                       child: Row(
@@ -140,13 +146,13 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
                         dateSelection = DateTime(1, 1, 1);
                       });
                       await _loadData();
-                      debugPrint(
-                          "Datetime: ${dateSelection.toString()}"); // TODO: delete in production
                     },
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.0),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(8.0),
+                            bottomRight: Radius.circular(8.0)),
                         color: Colors.amber,
                       ),
                       child: const Row(
@@ -172,6 +178,41 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
                 ],
               ),
             ),
+            Positioned(
+                left: 10,
+                top: 50,
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.2,
+                  width: 30,
+                  child: Column(
+                    children: [
+                      Text(
+                        max.toString(),
+                        style: const TextStyle(fontSize: 7.0),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(7.5, 2.5, 7.5, 2.5),
+                        child: Container(
+                          height: MediaQuery.of(context).size.height * 0.15,
+                          decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                Colors.blue,
+                                Colors.green,
+                                Colors.yellow,
+                                Colors.red
+                              ])),
+                        ),
+                      ),
+                      Text(
+                        min.toString(),
+                        style: const TextStyle(fontSize: 7.0),
+                      ),
+                    ],
+                  ),
+                ))
           ],
         ),
       ),
@@ -191,6 +232,12 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
 
     // add latitude, longitude, weight to heatmap data
     result.asMap().forEach((index, heightLocation) {
+      if (heightLocation[2] < min) {
+        min = heightLocation[2];
+      }
+      if (heightLocation[2] > max) {
+        max = heightLocation[2];
+      }
       data.add(WeightedLatLng(
           LatLng(heightLocation[0], heightLocation[1]), heightLocation[2]));
     });
@@ -223,15 +270,16 @@ class _ShowWifiDataPageState extends State<ShowWifiDataPage> {
               maxZoom: 30.0,
               heatMapDataSource: InMemoryHeatMapDataSource(data: data),
               heatMapOptions: HeatMapOptions(
-                  gradient: gradients[0],
-                  minOpacity: 1,
-                  blurFactor: 0.01,
+                  gradient: gradients[1],
+                  minOpacity: 0.3,
+                  blurFactor: 0.8,
                   radius: 3),
               reset: _rebuildStream.stream,
             )
         ],
       );
     });
+    debugPrint("$min, $max");
   }
 
   // get geo location
